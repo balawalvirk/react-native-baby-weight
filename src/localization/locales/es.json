@@ -1,0 +1,104 @@
+{
+  "IMAGE_PICKER_ERROR": "Para tomar la foto, la aplicación MyWeigh Baby necesita acceso a su cámara. Vaya a Configuración y ajuste los permisos para proporcionar acceso.",
+  "STORAGE_ERROR": "Para cargar la foto desde su dispositivo, la aplicación MyWeigh Baby necesita acceso a sus archivos multimedia. Vaya a Configuración y ajuste los permisos para proporcionar acceso.",
+  "CANCEL": "Cancelar",
+  "OK": "Ok",
+  "DATA": {
+    "NOTES": "Notas",
+    "TITLE": "Datos"
+  },
+  "DELETE": "Eliminar",
+  "EDIT": "Editar",
+  "BACK": "Atrás",
+  "EDIT_PROFILE": {
+    "ADD_IMAGE": "Toque para agregar imagen",
+    "NAME": "Nombre",
+    "TITLE": "Editar perfil",
+    "GOAL": "Peso al nacer",
+    "DUPLICATE_USERNAME": "Ya existe una cuenta para este nombre."
+  },
+  "GRAPH": {
+    "NO_DATA": "No hay datos de peso guardados",
+    "TITLE": "Gráfico",
+    "WEIGHT_TRACKER": "Rastreador de peso",
+    "NO_DATA_POINTS": "No hay datos de peso guardados",
+    "ALL_TIME": "Todo el tiempo",
+    "PER_MONTH": "Por mes",
+    "PER_WEEK": "Por semana",
+    "CHANGE_MONTH": "Cambiar mes",
+    "CHANGE_WEEK": "Cambiar semana"
+  },
+  "HOME": {
+    "EDIT": "Editar perfil",
+    "HISTORY": "Historial gráfico",
+    "TITLE": "Editar perfil",
+    "WEIGH": "Pesar",
+    "APP_TITLE": "My Weigh Baby"
+  },
+  "LANGUAGE": {
+    "ENGLISH": "Inglés",
+    "FRENCH": "Francés",
+    "GERMAN": "Alemán",
+    "SPANISH": "Español",
+    "TITLE": "Idioma"
+  },
+  "PRIVACY_POLICY": {
+    "TITLE": "Política de privacidad"
+  },
+  "PROFILES": {
+    "CHOOSE_PROFILE": "Elija un perfil",
+    "DELETE_ALL_ERR": "No puede eliminar todos los perfiles",
+    "DELETE_CONFIRM": "¿Está seguro de que desea eliminar este perfil y todos sus pesos guardados?",
+    "DELETE_PROFILE": "Eliminar perfil",
+    "MANAGE_PROFILE": "Administrar perfil",
+    "LAST_PROFILE": "Último perfil",
+    "PROFILE_LIMIT": "Límite de perfil",
+    "PROFILE_LIMIT_ERR": "Hay un límite de {{count}} perfiles. Eliminar un perfil anterior",
+    "TITLE": "Perfiles"
+  },
+  "SAVE": "Guardar",
+  "SAVING": {
+    "ADD_IMAGE": "Toca para agregar imagen",
+    "CONFIRM": "Confirmar",
+    "NOTES": "Notas",
+    "TITLE": "Guardar"
+  },
+  "SETTINGS": {
+    "TITLE": "Configuración"
+  },
+  "SHARE": {
+    "DATE": "Fecha: {{date}}",
+    "TIME": "Hora: {{time}}",
+    "TITLE": "Compartir",
+    "WEIGHT": "Peso: {{weight}}"
+  },
+  "WEIGH": {
+    "CONNECTED": "Conectado",
+    "CONNECTING": "Conectando...",
+    "DISCONNECT": "Desconectado\nToque para volver a conectar",
+    "ENABLE_PERMISSION": "Habilitar permiso de ubicación",
+    "HOLD": "Mantener peso",
+    "PERMISSION_DESCRIPTION": "MyWeigh Baby necesita acceso a su ubicación \n para que pueda conectarse a su báscula",
+    "PERMISSION_TITLE": "Permiso de ubicación",
+    "SCANNING": "Escaneando...",
+    "SETTING_BLUETOOTH": "Configurando Bluetooth...",
+    "SPEECH": "Leer en voz alta",
+    "TARE": "Tara a cero",
+    "TITLE": "Pesar",
+    "TURN_ON_BLUETOOTH": "Por favor encienda Bluetooth",
+    "TURN_ON_LOCATION": "Por favor encienda la ubicación",
+    "TURN_ON_SCALE": "Por favor encienda Escala",
+    "LANGUAGE_CODE": "es-ES",
+    "CONGRATULATIONS": "Felicitaciones {{name}} ha alcanzado su peso al nacer."
+  },
+  "AUDIO": {
+    "KILO": "{{audioWeightLocale}} kilogramos",
+    "POUND": "{{audioWeightLocale}} libras",
+    "OUNCE": "{{pounds}} libras {{audioOuncesLocale}} onzas"
+  },
+  "DISPLAY": {
+    "KILO": "{{weightDetected}} kg",
+    "POUND": "{{weightDetected}} lb",
+    "OUNCE": "{{pounds}} lb {{ounces}} oz"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "IMAGE_PICKER_ERROR": "Um das Foto aufzunehmen, benötigt die MyWeigh Baby App Zugriff auf Ihre Kamera. Bitte gehen Sie zu Einstellungen und passen Sie die Berechtigungen an, um den Zugriff zu gewähren.",
+  "STORAGE_ERROR": "Um das Foto von Ihrem Gerät hochzuladen, benötigt die MyWeigh Baby-App Zugriff auf Ihre Mediendateien. Bitte gehen Sie zu Einstellungen und passen Sie die Berechtigungen an, um den Zugriff zu gewähren.",
+  "CANCEL": "Stornieren",
+  "OK": "Ok",
+  "DATA": {
+    "NOTES": "Anmerkungen",
+    "TITLE": "Daten"
+  },
+  "DELETE": "Löschen",
+  "EDIT": "Bearbeiten",
+  "BACK": "Zurück",
+  "EDIT_PROFILE": {
+    "ADD_IMAGE": "Tippen Sie auf, um ein Bild hinzuzufügen",
+    "NAME": "Name",
+    "TITLE": "Profil bearbeiten",
+    "GOAL": "Geburtsgewicht",
+    "DUPLICATE_USERNAME": "Für diesen Namen existiert bereits ein Konto."
+  },
+  "GRAPH": {
+    "NO_DATA": "Es sind keine Gewichtsdaten gespeichert",
+    "TITLE": "Graph",
+    "WEIGHT_TRACKER": "Weight Tracker",
+    "NO_DATA_POINTS": "Es sind keine Gewichtsdaten gespeichert",
+    "ALL_TIME": "Aller Zeiten",
+    "PER_MONTH": "Pro Monat",
+    "PER_WEEK": "Pro Woche",
+    "CHANGE_MONTH": "Monat ändern",
+    "CHANGE_WEEK": "Woche ändern"
+  },
+  "HOME": {
+    "EDIT": "Profil bearbeiten",
+    "HISTORY": "Verlaufsdiagramm",
+    "TITLE": "Profil bearbeiten",
+    "WEIGH": "Weigh",
+    "APP_TITLE": "Mein Baby wiegen"
+  },
+  "LANGUAGE": {
+    "ENGLISH": "English",
+    "FRENCH": "Französisch",
+    "GERMAN": "Deutsch",
+    "SPANISH": "Spanish",
+    "TITLE": "Sprache"
+  },
+  "PRIVACY_POLICY": {
+    "TITLE": "Datenschutzerklärung"
+  },
+  "PROFILES": {
+    "CHOOSE_PROFILE": "Wähle ein Profil",
+    "DELETE_ALL_ERR": "Sie können nicht alle Profile löschen.",
+    "DELETE_CONFIRM": "Möchten Sie dieses Profil und alle gespeicherten Gewichte wirklich löschen?",
+    "DELETE_PROFILE": "Profil löschen",
+    "MANAGE_PROFILE": "Profil verwalten",
+    "LAST_PROFILE": "Letztes Profil",
+    "PROFILE_LIMIT": "Profile Limit",
+    "PROFILE_LIMIT_ERR": "Es gibt ein Limit von {{count}} Profilen. Bitte löschen Sie ein altes Profil.",
+    "TITLE": "Profile"
+  },
+  "SAVE": "Speichern",
+  "SAVING": {
+    "ADD_IMAGE": "Tippen Sie auf, um ein Bild hinzuzufügen",
+    "CONFIRM": "Bestätigen",
+    "NOTES": "Notes",
+    "TITLE": "Speichern"
+  },
+  "SETTINGS": {
+    "TITLE": "Einstellungen"
+  },
+  "SHARE": {
+    "DATE": "Date: {{date}}",
+    "TIME": "Zeit: {{time}}",
+    "TITLE": "Teilen",
+    "WEIGHT": "Gewicht: {{weight}}"
+  },
+  "WEIGH": {
+    "CONNECTED": "Verbunden",
+    "CONNECTING": "Anschließen...",
+    "DISCONNECT": "Getrennt\nTippen Sie auf, um die Verbindung wiederherzustellen",
+    "ENABLE_PERMISSION": "Bitte Standorterlaubnis aktivieren",
+    "HOLD": "Gewicht halten",
+    "PERMISSION_DESCRIPTION": "MyWeigh Baby benötigt Zugriff auf Ihren Standort, um eine Verbindung zu Ihrem Guthaben herzustellen.",
+    "PERMISSION_TITLE": "Standorterlaubnis",
+    "SCANNING": "Scan...",
+    "SETTING_BLUETOOTH": "Bluetooth einrichten...",
+    "SPEECH": "Vorlesen",
+    "TARE": "Tara auf Null",
+    "TITLE": "Wiegen",
+    "TURN_ON_BLUETOOTH": "Bitte schalten Sie Bluetooth ein",
+    "TURN_ON_LOCATION": "Bitte Standort einschalten",
+    "TURN_ON_SCALE": "Bitte Waage einschalten",
+    "LANGUAGE_CODE": "de-DE",
+    "CONGRATULATIONS": "Herzlichen Glückwunsch {{name}} hat sein Geburtsgewicht erreicht."
+  },
+  "AUDIO": {
+    "KILO": "{{audioWeightLocale}} kilogramm",
+    "POUND": "{{audioWeightLocale}} pfund",
+    "OUNCE": "{{pounds}} pfund {{audioOuncesLocale}} unzen"
+  },
+  "DISPLAY": {
+    "KILO": "{{weightDetected}} kg",
+    "POUND": "{{weightDetected}} lb",
+    "OUNCE": "{{pounds}} lb {{ounces}} oz"
+  }
+}
