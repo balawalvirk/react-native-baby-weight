@@ -31,6 +31,7 @@ export default StyleSheet.create({
     maxHeight: 45,
     color: colors.PRIMARY,
     borderBottomWidth: 0,
+    textAlign: 'right',
   },
   picker: {
     flex: 1,

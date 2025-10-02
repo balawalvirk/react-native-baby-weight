@@ -55,7 +55,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {TouchableOpacity, Image} from 'react-native';
-import {launchImageLibrary} from 'react-native-image-picker';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import FLToolbarIcon from 'components/external/FLToolbarIcon';
 import I18n from 'react-native-i18n';
 import toast from 'utils/toast';
@@ -83,15 +83,35 @@ class FLImagePicker extends Component {
       }
     });
   };
+  launchCamera = () => {
+    const {onChangeImage} = this.props;
+    const options = {
+      mediaType: 'photo',
+      maxWidth: 500,
+      maxHeight: 500,
+      quality: 1,
+    };
+    launchCamera(options, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        toast(I18n.t('IMAGE_PICKER_ERROR'));
+      } else {
+        const source = {uri: response.assets[0].uri};
+        onChangeImage(source);
+      }
+    });
+  };
 
   render() {
     const {image, color, size, icon, type, style} = this.props;
     return (
-      <TouchableOpacity style={[styles.button, style]} onPress={() => this.selectPhotoTapped()}>
+      <TouchableOpacity style={[styles.button, style]} onPress={() => this.selectPhotoTapped()} onLongPress={() => this.launchCamera()}>
         {image ? (
           <Image style={styles.image} source={image} resizeMode="cover" />
         ) : (
-          <FLToolbarIcon icon={icon} type={type} color={color} size={size} />
+          <FLToolbarIcon icon={icon} type={type} color={color} size={size} onPress={() => this.launchCamera()} />
+          // <FLToolbarIcon icon={icon} type={type} color={color} size={size} />
         )}
       </TouchableOpacity>
     );

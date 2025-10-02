@@ -349,7 +349,7 @@ const Weigh = () => {
       <FLContainer style={styles.displayPane}>
         <FLText style={styles.errorText}>{connectionStatus}</FLText>
         <FLContainer style={styles.modePane}>
-          <MWModeButton title="Kilos" onPress={() => cycleUnitTo(CONSTANTS.SCALE_UNITS.KILO)} selected={kgSelected} />
+          <MWModeButton title="Kg" onPress={() => cycleUnitTo(CONSTANTS.SCALE_UNITS.KILO)} selected={kgSelected} />
           <MWModeButton title="Lb" onPress={() => cycleUnitTo(CONSTANTS.SCALE_UNITS.POUND)} selected={lbSelected} />
           <MWModeButton
             title="Lb:Oz"

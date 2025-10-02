@@ -28,6 +28,75 @@ const Graph = () => {
   }))
   const retrieveData = async () => {
     const user = await retrieveUserData();
+    
+    // Add dummy data if no data exists
+    if (user && (!user.data || user.data.length === 0)) {
+      const dummyData = [
+        {
+          key: '1',
+          weight: 3500, // 3.5kg birth weight
+          date: new Date('2024-01-01').valueOf(),
+          notes: 'Birth weight',
+        },
+        {
+          key: '2',
+          weight: 3800, // 3.8kg
+          date: new Date('2024-01-15').valueOf(),
+          notes: '2 weeks',
+        },
+        {
+          key: '3',
+          weight: 4200, // 4.2kg
+          date: new Date('2024-02-01').valueOf(),
+          notes: '1 month',
+        },
+        {
+          key: '4',
+          weight: 4800, // 4.8kg
+          date: new Date('2024-02-15').valueOf(),
+          notes: '6 weeks',
+        },
+        {
+          key: '5',
+          weight: 5200, // 5.2kg
+          date: new Date('2024-03-01').valueOf(),
+          notes: '2 months',
+        },
+        {
+          key: '6',
+          weight: 5800, // 5.8kg
+          date: new Date('2024-03-15').valueOf(),
+          notes: '10 weeks',
+        },
+        {
+          key: '7',
+          weight: 6200, // 6.2kg
+          date: new Date('2024-04-01').valueOf(),
+          notes: '3 months',
+        },
+        {
+          key: '8',
+          weight: 6800, // 6.8kg
+          date: new Date('2024-04-15').valueOf(),
+          notes: '14 weeks',
+        },
+        {
+          key: '9',
+          weight: 7200, // 7.2kg
+          date: new Date('2024-05-01').valueOf(),
+          notes: '4 months',
+        },
+        {
+          key: '10',
+          weight: 7800, // 7.8kg
+          date: new Date('2024-05-15').valueOf(),
+          notes: '18 weeks',
+        }
+      ];
+      
+      user.data = dummyData;
+    }
+    
     setUserData(user);
   };
 
