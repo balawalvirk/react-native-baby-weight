@@ -42,6 +42,16 @@ const Weigh = () => {
   const [weight, setWeight] = useState(null);
   const [selectedUnit, setSelectedUnit] = useState('');
   const [autoSpeak, setAutoSpeak] = useState(false);
+
+  useEffect(() => {
+    const getAutoSpeak = async () => {
+      const value = await AsyncStorage.getItem(CONSTANTS.SETTINGS.AUTO_SPEAK_KEY);
+      if (value !== null) {
+        setAutoSpeak(JSON.parse(value));
+      }
+    };
+    getAutoSpeak();
+  }, []);
   const [isWeightStatic, setIsWeightStatic] = useState(false);
   const [goal, setGoal] = useState('');
   const [displayWeight, setDisplayWeight] = useState('');
@@ -73,7 +83,6 @@ const Weigh = () => {
     setGoal(goals);
   };
   useEffect(() => {
-
     return () => {
       // Stop the BLE manager and unsubscribe from events when the component unmounts
       manager.stop();
@@ -98,8 +107,6 @@ const Weigh = () => {
       setWeight(null);
       requestLocationPermission();
     }
-
-
   }, [bluetoothDeviceId]);
 
   useEffect(() => {
@@ -121,7 +128,6 @@ const Weigh = () => {
 
         subscription.remove();
       }
-
     }, true);
     return () => subscription.remove();
   }, [manager]);
@@ -172,11 +178,9 @@ const Weigh = () => {
               error?.message !== 'Bluetooth already in discovery mode' ? error?.message || '' : 'Connecting...',
             );
       });
-
   };
 
   const connect = async () => {
-
     connectToDevice(bluetoothDeviceId)
       .then((data) => {
         setBluetoothDevice(data.device);
@@ -194,7 +198,6 @@ const Weigh = () => {
     });
   };
 
-
   const requestLocationPermission = async () => {
     requestMultiple([
       PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
@@ -208,7 +211,6 @@ const Weigh = () => {
         setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.ENABLE_PERMISSION));
         setConnectionStatus(error);
       });
-
   };
 
   const setUnitData = async () => {
@@ -233,7 +235,6 @@ const Weigh = () => {
     }
     setSelectedUnit(unit);
   };
-
 
   const speak = (speechText) => {
     Tts.getInitStatus().then(
@@ -317,8 +318,10 @@ const Weigh = () => {
     }
   };
 
-  const handleToggleAutoSpeaking = () => {
-    setAutoSpeak((prevState) => !prevState);
+  const handleToggleAutoSpeaking = async () => {
+    const newValue = !autoSpeak;
+    setAutoSpeak(newValue);
+    await AsyncStorage.setItem(CONSTANTS.SETTINGS.AUTO_SPEAK_KEY, JSON.stringify(newValue));
   };
 
   const handleToggleHoldWeight = async () => {
@@ -388,4 +391,3 @@ const Weigh = () => {
 };
 
 export default Weigh;
-
