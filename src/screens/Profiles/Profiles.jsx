@@ -114,7 +114,6 @@ const Profiles = () => {
   if (!users) {
     return <FLLoading />;
   }
-
   const styles = makeStyles();
   const profiles = assemble.makeProfileCards(users, storeCurrentUser, alertManageUser);
 

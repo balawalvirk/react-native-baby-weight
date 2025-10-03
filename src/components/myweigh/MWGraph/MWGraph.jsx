@@ -9,6 +9,7 @@ import {
   VictoryScatter,
   VictoryClipContainer,
   VictoryLine,
+  VictoryLabel,
 } from 'victory-native';
 import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
 import I18n from 'react-native-i18n';
@@ -54,11 +55,24 @@ class MWGraph extends Component {
 
   render() {
     const {zoomDomain, data, mode, selectedUnit} = this.props;
+
+    // Add dummy data if no data exists
+    const testData =
+      data && data.length > 0
+        ? data
+        : [
+            {key: '1', weight: 3500, date: new Date('2024-01-01').valueOf(), notes: 'Birth weight'},
+            {key: '2', weight: 3800, date: new Date('2024-01-15').valueOf(), notes: '2 weeks'},
+            {key: '3', weight: 4200, date: new Date('2024-02-01').valueOf(), notes: '1 month'},
+            {key: '4', weight: 4800, date: new Date('2024-02-15').valueOf(), notes: '6 weeks'},
+            {key: '5', weight: 5200, date: new Date('2024-03-01').valueOf(), notes: '2 months'},
+          ];
+
     const dataWithLastElement = [
-      ...data,
+      ...testData,
       {
         key: 0,
-        weight: data[data.length - 1].weight,
+        weight: testData[testData.length - 1].weight,
         date: calendar.addDays(new Date(), 30).valueOf(),
       },
     ];
@@ -144,7 +158,45 @@ class MWGraph extends Component {
                     strokeWidth: 2,
                   },
                 }}
-                labels={() => null}
+                x="date"
+                y="weight"
+              />
+              {/* Labels for each data point */}
+              <VictoryScatter
+                data={dataWithLastElement}
+                size={0}
+                style={{
+                  data: {
+                    fill: 'transparent',
+                    stroke: 'transparent',
+                    strokeWidth: 0,
+                  },
+                }}
+                labels={dataWithLastElement.map((point, index) => {
+                  console.log('Point data:', point);
+                  if (!point || typeof point.weight === 'undefined') {
+                    return '';
+                  }
+                  const label = weightFormat.recountWeight({
+                    unit: selectedUnit,
+                    weight: point.weight,
+                    isNumber: true,
+                    toFixedNumber: 1,
+                  });
+                  console.log('Generated label:', label);
+                  return label;
+                })}
+                labelComponent={
+                  <VictoryLabel
+                    dy={2}
+                    style={{
+                      fontSize: 14,
+                      fontFamily: font,
+                      fill: colors.PRIMARY_DARK,
+                      fontWeight: 'bold',
+                    }}
+                  />
+                }
                 x="date"
                 y="weight"
               />

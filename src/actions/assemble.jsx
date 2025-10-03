@@ -21,12 +21,10 @@ import styles from './styles';
 export const makeProfileCards = (users, buttonClick, iconClick) => {
   const items = users.map((user) => {
     const displayImage = user.image === constants.DEFAULT_PROFILE_PIC_KEY ? constants.DEFAULT_PROFILE_PIC : user.image;
-    
+
     // Get the latest weight from user data
-    const latestWeight = user.data && user.data.length > 0 
-      ? user.data[user.data.length - 1].weight 
-      : null;
-    
+    const latestWeight = user.data && user.data.length > 0 ? user.data[user.data.length - 1].weight : null;
+
     const item = (
       <FLCard
         key={user.key}

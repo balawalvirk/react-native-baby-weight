@@ -4,10 +4,7 @@ import {useNavigation} from '@react-navigation/native';
 import CONSTANTS from 'config/constants';
 import {updateLanguage} from 'localization';
 import FLContainer from 'components/core/FLContainer';
-import {
-  FlatList,
-
-} from 'react-native';
+import {FlatList} from 'react-native';
 import styles from './styles';
 
 const Language = () => {

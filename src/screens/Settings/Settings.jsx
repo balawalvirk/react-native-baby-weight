@@ -1,4 +1,4 @@
-import React,{useCallback, useState}  from 'react';
+import React, {useCallback, useState} from 'react';
 import {ListItem} from 'react-native-elements';
 import FLContainer from 'components/core/FLContainer';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
@@ -9,7 +9,7 @@ import CONSTANTS from '../../config/constants';
 
 const settings = [
   {
-    title:'LANGUAGE.TITLE',
+    title: 'LANGUAGE.TITLE',
     routeName: CONSTANTS.SCREEN_LANGUAGE_TITLE,
   },
   {
@@ -18,12 +18,11 @@ const settings = [
   },
 ];
 const Settings = () => {
-  
   const navigation = useNavigation();
   const [userData, setUserData] = useState();
   useFocusEffect(
     useCallback(() => {
-      setUserData(settings)
+      setUserData(settings);
     }, []),
   );
   const renderItem = ({item}) => (
@@ -31,16 +30,13 @@ const Settings = () => {
       <ListItem
         key={item.routeName}
         containerStyle={styles.listItem}
-        title={ I18n.t(item.title)}
+        title={I18n.t(item.title)}
         onPress={() => navigation.navigate(item.routeName)}
       />
     </FLContainer>
   );
 
-  return (
-     <FlatList data={userData} renderItem={renderItem} keyExtractor={(item) => item.code} />
-);
+  return <FlatList data={userData} renderItem={renderItem} keyExtractor={(item) => item.code} />;
 };
 
 export default Settings;
-

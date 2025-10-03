@@ -137,7 +137,6 @@ const EditProfile = () => {
     }
   };
 
-  
   const createNewUser = () => {
     UUIDGenerator.getRandomUUID((uuid) => {
       const today = moment().format(CONSTANTS.DATE_FORMATS.DEFAULT);
@@ -163,23 +162,22 @@ const EditProfile = () => {
     }));
   };
 
-
   const [userData, setUserData] = useState({
-    goal: '', 
-    selectedUnit: '', 
-    dob: '', 
-    name: ''
+    goal: '',
+    selectedUnit: '',
+    dob: '',
+    name: '',
   });
   const profileImage = userData.image || CONSTANTS.DEFAULT_PROFILE_PIC;
 
-  const { goal, selectedUnit, dob, name } = userData;
+  const {goal, selectedUnit, dob, name} = userData;
 
   const onChangeInputGoalHandler = (t) => {
     const regex = /^\d*\.?\d*$/; // Matches decimal numbers
     if (regex.test(t)) {
       setUserData((prevState) => ({
         ...prevState,
-        goal: t // Update the goal in userData directly
+        goal: t, // Update the goal in userData directly
       }));
     }
   };
@@ -190,13 +188,13 @@ const EditProfile = () => {
       value = value.slice(0, -1);
       setUserData((prevState) => ({
         ...prevState,
-        goal: value
+        goal: value,
       }));
       const parsedValue = parseFloat(value);
       if (!isNaN(parsedValue)) {
         setUserData((prevState) => ({
           ...prevState,
-          goal: parsedValue
+          goal: parsedValue,
         }));
       }
     }
