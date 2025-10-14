@@ -35,7 +35,7 @@ const NAVIGATION_OPTIONS = {
     headerTitle: () => <FLHeaderTitle title={I18n.t('PROFILES.TITLE')} />,
   },
   SAVE: {
-    headerTitle: () => <FLHeaderTitle title={I18n.t('SAVE.TITLE')} />,
+    headerTitle: () => <FLHeaderTitle title={I18n.t('WEIGHING.DATA')} />,
   },
   GRAPH: {
     headerTitle: () => <FLHeaderTitle title={I18n.t('GRAPH.TITLE')} />,

@@ -14,10 +14,6 @@ export default StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     flex: 1,
-    maxHeight: Platform.select({
-      android: height / 2,
-      ios: 320,
-    }),
     backgroundColor: colors.LIGHT,
   },
   chartContainer: {

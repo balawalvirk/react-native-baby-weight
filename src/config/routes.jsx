@@ -41,30 +41,51 @@ function AppNavigator() {
   }, [bluetoothDeviceId]);
 
   useEffect(() => {
-    deviceConnectionMonitoring();
-  });
+    // Start monitoring for device disconnects and clean up on unmount or id change
+    const cleanup = deviceConnectionMonitoring();
+    return cleanup;
+  }, [deviceConnectionMonitoring]);
 
   useEffect(() => {
-    if (isConnected) {
-      monitorValues();
-    }
-  }, [isConnected]);
+    // Monitor characteristics only while connected; ensure cleanup when dependencies change
+    if (!isConnected || !bluetoothDeviceId) return;
+    const cleanup = monitorValues();
+    return cleanup;
+  }, [isConnected, bluetoothDeviceId]);
 
   const monitorValues = () => {
-    const subscription = manager.monitorCharacteristicForDevice(
-      bluetoothDeviceId,
-      CONSTANTS.SERVICE_UUID,
-      CONSTANTS.CHARACTERISTIC_UUID,
-      (error, characteristic) => {
-        if (error) {
-          setConnectionStatus(checkError(error));
-          return;
-        }
-        setStates(convertWeightValues(characteristic?.value ?? ''));
-        setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTED));
-      },
-    );
-    return () => subscription.remove;
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const startMonitoring = () => {
+      const subscription = manager.monitorCharacteristicForDevice(
+        bluetoothDeviceId,
+        CONSTANTS.SERVICE_UUID,
+        CONSTANTS.CHARACTERISTIC_UUID,
+        (error, characteristic) => {
+          if (error) {
+            console.error('Monitor error:', error);
+            if (retryCount < maxRetries) {
+              retryCount++;
+              console.log(`Retrying monitor (${retryCount}/${maxRetries})...`);
+              // Wait a bit before retrying
+              setTimeout(startMonitoring, 1000);
+            } else {
+              setConnectionStatus(checkError(error));
+            }
+            return;
+          }
+          // Reset retry count on successful monitoring
+          retryCount = 0;
+          setStates(convertWeightValues(characteristic?.value ?? ''));
+          setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTED));
+        },
+      );
+      return subscription;
+    };
+
+    const subscription = startMonitoring();
+    return () => subscription.remove();
   };
 
   return (

@@ -54,7 +54,7 @@ class MWGraph extends Component {
   }
 
   render() {
-    const {zoomDomain, data, mode, selectedUnit} = this.props;
+    const {zoomDomain, data, mode, selectedUnit, graphHeight} = this.props;
 
     // Add dummy data if no data exists
     const testData =
@@ -76,7 +76,8 @@ class MWGraph extends Component {
         date: calendar.addDays(new Date(), 30).valueOf(),
       },
     ];
-    const vb = `0 0 ${wp('95%')} 250`;
+    const chartHeight = typeof graphHeight === 'number' ? graphHeight : 250;
+    const vb = `0 0 ${wp('95%')} ${chartHeight}`;
     const goalData = this.generateGoalData();
 
     return (
@@ -93,11 +94,11 @@ class MWGraph extends Component {
           <View style={styles.emptyView} />
         )}
         <FLContainer style={styles.chartContainer}>
-          <Svg width={wp('100%')} style={styles.graphSvg} height={250} viewBox={vb}>
+          <Svg width={wp('100%')} style={styles.graphSvg} height={chartHeight} viewBox={vb}>
             <VictoryChart
               standalone={false}
               width={wp('100%')}
-              height={250}
+              height={chartHeight}
               scale={{x: 'time'}}
               padding={{top: 30, bottom: 40, left: 55, right: 10}}
               domain={zoomDomain}
@@ -211,6 +212,7 @@ class MWGraph extends Component {
 
 MWGraph.propTypes = {
   data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  graphHeight: PropTypes.number,
 };
 
 export default MWGraph;

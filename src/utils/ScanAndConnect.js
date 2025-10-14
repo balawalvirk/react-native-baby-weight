@@ -46,34 +46,64 @@ export const connectToDevice = async (bluetoothDeviceId, retryCount = 3) => {
 
   const tryConnect = async () => {
     try {
+      // Stop any ongoing scan
+      manager.stopDeviceScan();
+
       // Check if the device is already connected
       const isConnected = await manager.isDeviceConnected(bluetoothDeviceId);
       if (isConnected) {
-        manager.stopDeviceScan();
-        const device = await manager.devices([bluetoothDeviceId]);
-        return {device: device[0], connection: true};
+        const devices = await manager.devices([bluetoothDeviceId]);
+        if (devices && devices.length > 0) {
+          // Ensure services are discovered
+          await devices[0].discoverAllServicesAndCharacteristics();
+          return {device: devices[0], connection: true};
+        }
       }
-      console.log({device}, 'ddedvices');
-      // Attempt to connect to the device
-      const device = await manager.connectToDevice(bluetoothDeviceId);
 
-      await device?.discoverAllServicesAndCharacteristics();
+      // Attempt to connect to the device
+      const device = await manager.connectToDevice(bluetoothDeviceId, {
+        autoConnect: false, // Changed to false for more reliable initial connection
+        timeout: 10000, // Increased timeout for better connection chance
+      });
+
+      if (!device) {
+        throw new Error('Failed to connect to device');
+      }
+
+      // Wait a bit before discovering services
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Discover services and characteristics
+      await device.discoverAllServicesAndCharacteristics();
+
+      // Wait a bit after discovering services
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify the connection
       const connection = await manager.isDeviceConnected(bluetoothDeviceId);
-      console.log({device, connection}, 'ddedvicesssssss');
+
       if (connection) {
-        return {device, connection};
+        return {device, connection: true};
       } else {
-        return {device, connection: false};
+        throw new Error('Device connection verification failed');
       }
     } catch (error) {
       console.error(`Error connecting to device (Attempt ${attempt + 1}):`, error);
-      scanDevice();
-      attempt += 1;
 
+      // Clean up failed connection attempt
+      try {
+        await manager.cancelDeviceConnection(bluetoothDeviceId);
+        // Wait a bit after canceling connection
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (cleanupError) {
+        console.error('Error cleaning up failed connection:', cleanupError);
+      }
+
+      attempt += 1;
       if (attempt < retryCount) {
         console.log(`Retrying connection... (${attempt + 1}/${retryCount})`);
+        // Wait longer before retrying
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         return await tryConnect();
       } else {
         return {error: error.message || 'Failed to connect to device after multiple attempts'};

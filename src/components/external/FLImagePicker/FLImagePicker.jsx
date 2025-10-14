@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {TouchableOpacity, Image, Text, View} from 'react-native';
+import {TouchableOpacity, Image, Text, View, Alert, Platform} from 'react-native';
 import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import Modal from 'react-native-modal';
 import FLToolbarIcon from 'components/external/FLToolbarIcon';
@@ -9,6 +9,7 @@ import I18n from 'react-native-i18n';
 import toast from 'utils/toast';
 import colors from 'config/colors';
 import styles from './styles';
+import {PERMISSIONS, RESULTS, check, request, openSettings} from 'react-native-permissions';
 
 class FLImagePicker extends Component {
   state = {
@@ -19,6 +20,47 @@ class FLImagePicker extends Component {
     this.setState((prevState) => ({isModalVisible: !prevState.isModalVisible}));
   };
 
+  requestPermissionWithAlert = (permission, title, message) => {
+    return new Promise((resolve) => {
+      Alert.alert(
+        title,
+        message,
+        [
+          {
+            text: 'OK',
+            onPress: async () => {
+              const status = await request(permission);
+              resolve(status);
+            },
+          },
+        ],
+        {cancelable: false},
+      );
+    });
+  };
+
+  checkAndRequestPermission = async (permission, title, message) => {
+    const status = await check(permission);
+    if (status === RESULTS.GRANTED) {
+      return RESULTS.GRANTED;
+    }
+    return await this.requestPermissionWithAlert(permission, title, message);
+  };
+
+  getGalleryPermission = () => {
+    if (Platform.OS === 'android') {
+      // Android 13+ uses READ_MEDIA_IMAGES, older versions use READ_EXTERNAL_STORAGE
+      return Platform.Version >= 33
+        ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
+        : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+    }
+    return PERMISSIONS.IOS.PHOTO_LIBRARY;
+  };
+
+  getCameraPermission = () => {
+    return Platform.OS === 'android' ? PERMISSIONS.ANDROID.CAMERA : PERMISSIONS.IOS.CAMERA;
+  };
+
   selectPhotoTapped = async () => {
     const {onChangeImage} = this.props;
     const options = {
@@ -27,21 +69,42 @@ class FLImagePicker extends Component {
       maxHeight: 500,
       quality: 1,
     };
-    // Close modal immediately when gallery opens
-    this.toggleModal();
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        // User cancelled image picker
-      } else if (response.errorMessage) {
-        toast(I18n.t('IMAGE_PICKER_ERROR'));
-      } else {
-        const source = {uri: response.assets[0].uri};
-        onChangeImage(source);
-      }
-    });
+    const permission = this.getGalleryPermission();
+    const status = await this.checkAndRequestPermission(
+      permission,
+      'Photo Access Required',
+      'MyBaby Weigh needs access to your photos to select an image.',
+    );
+
+    if (status === RESULTS.GRANTED) {
+      // Close modal immediately when gallery opens
+      this.toggleModal();
+      launchImageLibrary(options, (response) => {
+        if (response.didCancel) {
+          // User cancelled image picker
+        } else if (response.errorMessage) {
+          toast(I18n.t('IMAGE_PICKER_ERROR'));
+        } else {
+          const source = {uri: response.assets[0].uri};
+          onChangeImage(source);
+        }
+      });
+    } else {
+      // Close modal and prompt user to open Settings
+      if (this.state.isModalVisible) this.toggleModal();
+      Alert.alert(
+        'Permission Required',
+        'Please enable photo library access in the app settings.',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {text: 'Open Settings', onPress: () => openSettings().catch(() => console.warn('Cannot open settings'))},
+        ],
+        {cancelable: true},
+      );
+    }
   };
 
-  launchCamera = () => {
+  launchCamera = async () => {
     const {onChangeImage} = this.props;
     const options = {
       mediaType: 'photo',
@@ -49,18 +112,39 @@ class FLImagePicker extends Component {
       maxHeight: 500,
       quality: 1,
     };
-    launchCamera(options, (response) => {
-      if (response.didCancel) {
-        // User cancelled image picker
-      } else if (response.errorMessage) {
-        toast(I18n.t('IMAGE_PICKER_ERROR'));
-      } else {
-        const source = {uri: response.assets[0].uri};
-        onChangeImage(source);
-      }
-      // Close modal after response (whether cancelled, error, or success)
-      this.toggleModal();
-    });
+    const permission = this.getCameraPermission();
+    const status = await this.checkAndRequestPermission(
+      permission,
+      'Camera Access Required',
+      'MyBaby Weigh needs access to your camera to take a photo.',
+    );
+
+    if (status === RESULTS.GRANTED) {
+      launchCamera(options, (response) => {
+        if (response.didCancel) {
+          // User cancelled image picker
+        } else if (response.errorMessage) {
+          toast(I18n.t('IMAGE_PICKER_ERROR'));
+        } else {
+          const source = {uri: response.assets[0].uri};
+          onChangeImage(source);
+        }
+        // Close modal after response (whether cancelled, error, or success)
+        this.toggleModal();
+      });
+    } else {
+      // Close modal and prompt user to open Settings
+      if (this.state.isModalVisible) this.toggleModal();
+      Alert.alert(
+        'Permission Required',
+        'Please enable camera access in the app settings.',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {text: 'Open Settings', onPress: () => openSettings().catch(() => console.warn('Cannot open settings'))},
+        ],
+        {cancelable: true},
+      );
+    }
   };
 
   render() {

@@ -8,8 +8,8 @@ import MWScaleButton from 'components/myweigh/MWScaleButton';
 import CONSTANTS from 'config/constants';
 import TIMEOUTS from 'config/timeouts';
 import {BluetoothContext} from 'context';
-import React, {useContext, useEffect, useState} from 'react';
-// import BleManager from 'react-native-ble-manager';
+import React, {useCallback, useContext, useEffect, useRef, useState} from 'react';
+import BleManager from 'react-native-ble-manager';
 import I18n from 'react-native-i18n';
 import {PERMISSIONS, request, requestMultiple} from 'react-native-permissions';
 import Tts from 'react-native-tts';
@@ -21,9 +21,6 @@ import {checkError} from 'utils/checkBluetoothError';
 import retrieveUserData from 'utils/getUserData';
 import toast from 'utils/toast';
 import styles from './styles';
-import BleManager from 'react-native-ble-manager';
-import RNBluetoothClassic, {BluetoothClassic} from 'react-native-bluetooth-classic';
-import {Alert, NativeEventEmitter, NativeModules, View} from 'react-native';
 // import BleManager from '../../utils/BleManager';
 
 const Weigh = () => {
@@ -42,6 +39,8 @@ const Weigh = () => {
   const [weight, setWeight] = useState(null);
   const [selectedUnit, setSelectedUnit] = useState('');
   const [autoSpeak, setAutoSpeak] = useState(false);
+  const [isSwitchingUnit, setIsSwitchingUnit] = useState(false);
+  const lastUnitSwitchRef = useRef(0);
 
   useEffect(() => {
     const getAutoSpeak = async () => {
@@ -82,24 +81,119 @@ const Weigh = () => {
     const goals = await AsyncStorage.getItem(CONSTANTS.SETTINGS.GOAL_KEY);
     setGoal(goals);
   };
+  // Cleanup effect for Bluetooth operations
   useEffect(() => {
-    return () => {
-      // Stop the BLE manager and unsubscribe from events when the component unmounts
-      manager.stop();
-      manager.removeAllListeners();
-    };
-  }, []);
+    let isComponentMounted = true;
 
-  const stopDiscovery = async () => {
-    try {
-      await RNBluetoothClassic.cancelDiscovery();
-      console.log('Discovery stopped');
-    } catch (err) {
-      console.error('Error stopping discovery:', err);
+    const cleanup = async () => {
+      try {
+        if (!isComponentMounted) return;
+
+        // Stop scanning first
+        manager.stopDeviceScan();
+
+        // Disconnect from device if connected
+        if (bluetoothDevice && isConnected) {
+          await bluetoothDevice.cancelConnection();
+        }
+
+        // Reset states
+        setIsConnected(false);
+        setBluetoothDevice(null);
+        setBluetoothDeviceId(null);
+        setWeight(null);
+
+        // Remove all listeners
+        manager.removeAllListeners();
+      } catch (e) {
+        console.error('Error cleaning up Bluetooth:', e);
+      }
+    };
+
+    return () => {
+      isComponentMounted = false;
+      cleanup();
+    };
+  }, [bluetoothDevice, isConnected, setBluetoothDevice, setBluetoothDeviceId, setIsConnected]);
+
+  // Connection monitoring effect
+  useEffect(() => {
+    let isComponentMounted = true;
+    let reconnectTimeout;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+
+    const handleDisconnect = async () => {
+      if (!isComponentMounted) return;
+
+      console.log('Device disconnected, attempting to reconnect...');
+      setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.RECONNECTING));
+
+      // Clean up existing connection first
+      try {
+        await manager.cancelDeviceConnection(bluetoothDeviceId);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error('Error cleaning up existing connection:', error);
+      }
+
+      if (reconnectAttempts < maxReconnectAttempts) {
+        reconnectAttempts++;
+        // Wait before trying to reconnect
+        reconnectTimeout = setTimeout(async () => {
+          try {
+            // Stop any ongoing scan before reconnecting
+            manager.stopDeviceScan();
+            
+            const result = await connectToDevice(bluetoothDeviceId);
+            if (result.connection && result.device) {
+              setBluetoothDevice(result.device);
+              setIsConnected(true);
+              setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTED));
+              reconnectAttempts = 0; // Reset attempts on successful connection
+              
+              // Re-initialize device after reconnection
+              try {
+                await setUnitData();
+              } catch (error) {
+                console.error('Error reinitializing device after reconnection:', error);
+              }
+            } else {
+              throw new Error('Reconnection failed');
+            }
+          } catch (error) {
+            console.error('Reconnection attempt failed:', error);
+            if (reconnectAttempts >= maxReconnectAttempts) {
+              setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.DISCONNECTED));
+              // Reset states on final failure
+              setIsConnected(false);
+              setBluetoothDevice(null);
+            }
+          }
+        }, 2000); // Wait 2 seconds before reconnecting
+      } else {
+        setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.DISCONNECTED));
+        // Reset states
+        setIsConnected(false);
+        setBluetoothDevice(null);
+      }
+    };
+
+    if (bluetoothDevice && isConnected) {
+      const subscription = manager.onDeviceDisconnected(bluetoothDeviceId, handleDisconnect);
+      return () => {
+        isComponentMounted = false;
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+        }
+        subscription.remove();
+      };
     }
-  };
+  }, [bluetoothDevice, bluetoothDeviceId, isConnected, setUnitData]);
+
   const [isScanning, setIsScanning] = useState(false);
 
+  // Goal and initial connection effect
   useEffect(() => {
     getGoal();
 
@@ -109,28 +203,54 @@ const Weigh = () => {
     }
   }, [bluetoothDeviceId]);
 
+  // Connection effect
   useEffect(() => {
-    if (bluetoothDeviceId && !isConnected) {
+    let isActive = true;
+
+    if (bluetoothDeviceId && !isConnected && isActive) {
       connect();
     }
+
+    return () => {
+      isActive = false;
+    };
   }, [bluetoothDeviceId, isConnected]);
 
+  // Value update effect
   useEffect(() => {
     if (isConnected) {
       updateValue();
     }
-  }, [states, isConnected]);
+  }, [isConnected, unit, weightDetected, pounds, ounces, audioWeightLocale, audioOuncesLocale, updateValue]);
 
+  // Bluetooth state change effect
   useEffect(() => {
-    const subscription = manager.onStateChange((state) => {
-      if (state === 'PoweredOn') {
-        requestLocationPermission();
+    let isComponentMounted = true;
+    let stateSubscription;
 
-        subscription.remove();
+    if (manager) {
+      stateSubscription = manager.onStateChange((state) => {
+        if (!isComponentMounted) return;
+
+        if (state === 'PoweredOn') {
+          requestLocationPermission();
+        } else if (state === 'PoweredOff') {
+          // Clean up connection when Bluetooth is turned off
+          setIsConnected(false);
+          setBluetoothDevice(null);
+          setBluetoothDeviceId(null);
+          setWeight(null);
+        }
+      }, true);
+    }
+
+    return () => {
+      isComponentMounted = false;
+      if (stateSubscription) {
+        stateSubscription.remove();
       }
-    }, true);
-    return () => subscription.remove();
-  }, [manager]);
+    };
+  }, [manager, requestLocationPermission, setBluetoothDevice, setBluetoothDeviceId, setIsConnected]);
 
   useEffect(() => {
     if (prevWeight !== displayWeight && autoSpeak) {
@@ -181,14 +301,31 @@ const Weigh = () => {
   };
 
   const connect = async () => {
-    connectToDevice(bluetoothDeviceId)
-      .then((data) => {
-        setBluetoothDevice(data.device);
-        setIsConnected(data.connection);
-      })
-      .catch((error) => setConnectionStatus(checkError(error)));
+    try {
+      setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTING));
+      const result = await connectToDevice(bluetoothDeviceId);
 
-    setUnitData();
+      if (result.error) {
+        setConnectionStatus(checkError({message: result.error}));
+        return;
+      }
+
+      if (result.connection && result.device) {
+        setBluetoothDevice(result.device);
+        setIsConnected(true);
+        setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTED));
+        await setUnitData();
+      } else {
+        setIsConnected(false);
+        setBluetoothDevice(null);
+        setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.DISCONNECTED));
+      }
+    } catch (error) {
+      console.error('Connection error:', error);
+      setConnectionStatus(checkError(error));
+      setIsConnected(false);
+      setBluetoothDevice(null);
+    }
   };
   const requestPermissionWithRationale = (permission, rationale) => {
     return new Promise((resolve, reject) => {
@@ -218,7 +355,7 @@ const Weigh = () => {
     cycleUnitTo(user?.selectedUnit || '');
   };
 
-  const updateValue = () => {
+  const updateValue = useCallback(() => {
     switch (unit) {
       case CONSTANTS.SCALE_UNITS.KILO:
         setDisplayWeight(I18n.t('DISPLAY.KILO', {weightDetected}));
@@ -234,46 +371,44 @@ const Weigh = () => {
         break;
     }
     setSelectedUnit(unit);
-  };
+  }, [unit, weightDetected, audioWeightLocale, pounds, ounces, audioOuncesLocale]);
 
-  const speak = (speechText) => {
-    Tts.getInitStatus().then(
-      () => {
-        if (audioWeight) {
-          Tts.speak(speechText);
-          if (!isWeightHold) {
-            handleToggleHoldWeight();
+  const speak = useCallback(
+    (speechText) => {
+      Tts.getInitStatus().then(
+        () => {
+          if (audioWeight) {
+            Tts.speak(speechText);
+            if (!isWeightHold) {
+              handleToggleHoldWeight();
+            }
           }
-        }
-      },
-      (error) => {
-        if (error.code === 'no_engine') {
-          Tts.requestInstallEngine();
-        }
-      },
-    );
-  };
+        },
+        (error) => {
+          if (error.code === 'no_engine') {
+            Tts.requestInstallEngine();
+          }
+        },
+      );
+    },
+    [audioWeight, isWeightHold, handleToggleHoldWeight],
+  );
 
-  const reconnect = () => {
+  const reconnect = useCallback(() => {
     requestMultiple([
       PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
       PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
       PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
     ])
-      .then((res) => {
-        console.log(res);
-        // if (!bluetoothDeviceId) {
-        // manager.stopDeviceScan();
+      .then(() => {
         scan();
-
-        // }
       })
       .catch((err) => {
-        console.log(err);
+        console.error('Reconnect error:', err);
       });
-  };
+  }, [scan]);
 
-  const convertWeight = () => {
+  const convertWeight = useCallback(() => {
     switch (unit) {
       case CONSTANTS.SCALE_UNITS.KILO:
         return Number.parseInt(parseFloat(weightDetected) * CONSTANTS.CONVERSIONS.GRAMS_KILO, 10);
@@ -288,16 +423,15 @@ const Weigh = () => {
           10,
         );
     }
-  };
+  }, [unit, weightDetected, pounds, ounces]);
 
-  const confirmSave = async () => {
+  const confirmSave = useCallback(async () => {
     if (weight !== CONSTANTS.DISCONNECTED_MESSAGE) {
       const weightGrams = convertWeight();
 
       if (goal && weightGrams > goal) {
         const user = await retrieveUserData();
         const title = I18n.t(CONSTANTS.SCREEN_WEIGH_MESSAGES.CONGRATULATIONS, user.name);
-
         toast(title);
       }
 
@@ -306,47 +440,69 @@ const Weigh = () => {
         selectedUnit,
       });
     }
-  };
+  }, [weight, convertWeight, goal, navigate, selectedUnit]);
 
-  const cycleUnitTo = async (unit) => {
-    if (bluetoothDevice && unit !== selectedUnit) {
-      await bluetoothDevice.writeCharacteristicWithResponseForService(
-        CONSTANTS.SERVICE_UUID,
-        CONSTANTS.CHARACTERISTIC_UUID,
-        CONSTANTS.SCALE_FUNCTIONS.UNIT,
-      );
-    }
-  };
+  const cycleUnitTo = useCallback(
+    async (desiredUnit) => {
+      // Throttle rapid taps to prevent BLE command backlog
+      const now = Date.now();
+      if (now - lastUnitSwitchRef.current < 300) return;
+      lastUnitSwitchRef.current = now;
 
-  const handleToggleAutoSpeaking = async () => {
+      // Optimistically update selection for snappier UI
+      if (desiredUnit !== selectedUnit) {
+        setSelectedUnit(desiredUnit);
+      }
+
+      if (bluetoothDevice) {
+        try {
+          setIsSwitchingUnit(true);
+          await bluetoothDevice.writeCharacteristicWithResponseForService(
+            CONSTANTS.SERVICE_UUID,
+            CONSTANTS.CHARACTERISTIC_UUID,
+            CONSTANTS.SCALE_FUNCTIONS.UNIT,
+          );
+        } catch (e) {
+          console.error('Unit switch write failed:', e);
+        } finally {
+          setIsSwitchingUnit(false);
+        }
+      }
+    },
+    [bluetoothDevice, selectedUnit],
+  );
+
+  const handleToggleAutoSpeaking = useCallback(async () => {
     const newValue = !autoSpeak;
     setAutoSpeak(newValue);
     await AsyncStorage.setItem(CONSTANTS.SETTINGS.AUTO_SPEAK_KEY, JSON.stringify(newValue));
-  };
+  }, [autoSpeak]);
 
-  const handleToggleHoldWeight = async () => {
+  const scaleFunction = useCallback(
+    async (scaleFunction) => {
+      if (bluetoothDevice) {
+        return bluetoothDevice.writeCharacteristicWithResponseForService(
+          CONSTANTS.SERVICE_UUID,
+          CONSTANTS.CHARACTERISTIC_UUID,
+          scaleFunction,
+        );
+      }
+    },
+    [bluetoothDevice],
+  );
+
+  const handleToggleHoldWeight = useCallback(async () => {
     setIsWeightHold((prevState) => !prevState);
-
     await scaleFunction(CONSTANTS.SCALE_FUNCTIONS.HOLD);
-  };
+  }, [scaleFunction]);
 
-  const scaleFunction = async (scaleFunction) => {
-    if (bluetoothDevice) {
-      return bluetoothDevice.writeCharacteristicWithResponseForService(
-        CONSTANTS.SERVICE_UUID,
-        CONSTANTS.CHARACTERISTIC_UUID,
-        scaleFunction,
-      );
-    }
-  };
-
-  const handleToggleTareToZero = async () => {
+  const handleToggleTareToZero = useCallback(async () => {
     if (isWeightStatic) {
       await handleToggleHoldWeight();
       await scaleFunction(CONSTANTS.SCALE_FUNCTIONS.TARE);
-      setIsWeightStatic(false), () => scaleFunction(CONSTANTS.SCALE_FUNCTIONS.TARE);
+      setIsWeightStatic(false);
     }
-  };
+  }, [isWeightStatic, handleToggleHoldWeight, scaleFunction]);
   return (
     <FLContainer>
       <FLContainer style={styles.displayPane}>

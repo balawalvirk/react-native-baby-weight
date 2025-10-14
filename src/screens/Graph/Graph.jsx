@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, ScrollView} from 'react-native';
+import {View, ScrollView, useWindowDimensions} from 'react-native';
 import I18n from 'react-native-i18n';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import retrieveUserData from 'utils/getUserData';
@@ -19,6 +19,8 @@ const Graph = () => {
   const [userData, setUserData] = useState();
   const [state, setState] = useState(CONSTANTS.GRAPH_INITIAL_STATE);
   const [mode, setMode] = useState(CONSTANTS.MODES.ALL);
+  const {width, height} = useWindowDimensions();
+  const isLandscape = width > height;
 
   const retrieveData = async () => {
     const user = await retrieveUserData();
@@ -58,13 +60,28 @@ const Graph = () => {
     return user.selectedUnit !== CONSTANTS.SCALE_UNITS.POUND_OUNCE ? user.selectedUnit : CONSTANTS.SCALE_UNITS.POUND;
   };
 
+  const convertGoalToGrams = (goal, unit) => {
+    if (goal === undefined || goal === null || goal === '') return null;
+    const numericGoal = typeof goal === 'string' ? parseFloat(goal) : goal;
+    if (isNaN(numericGoal)) return null;
+    switch (unit) {
+      case CONSTANTS.SCALE_UNITS.KILO:
+        return numericGoal * CONSTANTS.CONVERSIONS.GRAMS_KILO;
+      case CONSTANTS.SCALE_UNITS.POUND:
+      case CONSTANTS.SCALE_UNITS.POUND_OUNCE:
+        return numericGoal * CONSTANTS.CONVERSIONS.GRAMS_POUND;
+      default:
+        return numericGoal * CONSTANTS.CONVERSIONS.GRAMS_KILO;
+    }
+  };
+
   const calculateData = (data) => {
     let dateMax = data[0].date;
     let dateMin = data[0].date;
     let weightMax = data[0].weight;
     let weightMin = data[0].weight;
     let delta = 0;
-    const {goal} = userData;
+    const goal = convertGoalToGrams(userData.goal, handleSelectUnits(userData));
     if (data.length === 1) {
       setState({
         zoomDomain: {
@@ -152,6 +169,8 @@ const Graph = () => {
     });
   };
 
+  // Follow device rotation; no explicit orientation lock for this screen.
+
   if (!userData) {
     return <FLLoading />;
   }
@@ -163,6 +182,7 @@ const Graph = () => {
   const {clickedListItemIndex, selectedUnit} = userData;
 
   const graphSelectedUnit = handleSelectUnits(userData);
+  const graphHeight = isLandscape ? Math.floor(height * 0.6) : Math.floor(height * 0.35);
 
   return (
     <View style={styles.graphContainer}>

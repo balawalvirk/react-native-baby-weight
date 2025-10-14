@@ -1,6 +1,4 @@
-import {StyleSheet, Dimensions, Platform} from 'react-native';
-
-const DEVICE_HEIGHT = Dimensions.get('screen').height;
+import {StyleSheet, Platform} from 'react-native';
 
 export default StyleSheet.create({
   graphContainer: {
@@ -21,7 +19,6 @@ export default StyleSheet.create({
       ios: 0,
     }),
     flex: 1,
-    maxHeight: DEVICE_HEIGHT / 2,
   },
   scrollView: {
     flex: 1,
