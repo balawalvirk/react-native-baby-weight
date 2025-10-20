@@ -87,7 +87,9 @@ const Weigh = () => {
 
     const cleanup = async () => {
       try {
-        if (!isComponentMounted) return;
+        if (!isComponentMounted) {
+          return;
+        }
 
         // Stop scanning first
         manager.stopDeviceScan();
@@ -124,7 +126,9 @@ const Weigh = () => {
     const maxReconnectAttempts = 3;
 
     const handleDisconnect = async () => {
-      if (!isComponentMounted) return;
+      if (!isComponentMounted) {
+        return;
+      }
 
       console.log('Device disconnected, attempting to reconnect...');
       setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.RECONNECTING));
@@ -132,7 +136,7 @@ const Weigh = () => {
       // Clean up existing connection first
       try {
         await manager.cancelDeviceConnection(bluetoothDeviceId);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
         console.error('Error cleaning up existing connection:', error);
       }
@@ -144,14 +148,14 @@ const Weigh = () => {
           try {
             // Stop any ongoing scan before reconnecting
             manager.stopDeviceScan();
-            
+
             const result = await connectToDevice(bluetoothDeviceId);
             if (result.connection && result.device) {
               setBluetoothDevice(result.device);
               setIsConnected(true);
               setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTED));
               reconnectAttempts = 0; // Reset attempts on successful connection
-              
+
               // Re-initialize device after reconnection
               try {
                 await setUnitData();
@@ -230,7 +234,9 @@ const Weigh = () => {
 
     if (manager) {
       stateSubscription = manager.onStateChange((state) => {
-        if (!isComponentMounted) return;
+        if (!isComponentMounted) {
+          return;
+        }
 
         if (state === 'PoweredOn') {
           requestLocationPermission();
@@ -272,7 +278,7 @@ const Weigh = () => {
         console.log('No connected bluetooth devices');
       } else {
         for (let i = 0; i < results.length; i++) {
-          let peripheral = results[i];
+          const peripheral = results[i];
           peripheral.connected = true;
           peripherals.set(peripheral.id, peripheral);
           console.log({peripheral});
@@ -446,7 +452,9 @@ const Weigh = () => {
     async (desiredUnit) => {
       // Throttle rapid taps to prevent BLE command backlog
       const now = Date.now();
-      if (now - lastUnitSwitchRef.current < 300) return;
+      if (now - lastUnitSwitchRef.current < 300) {
+        return;
+      }
       lastUnitSwitchRef.current = now;
 
       // Optimistically update selection for snappier UI

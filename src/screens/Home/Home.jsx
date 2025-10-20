@@ -8,9 +8,9 @@ import FLContainer from 'components/core/FLContainer';
 import FLLoading from 'components/composed/FLLoading';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import retrieveUserData from 'utils/getUserData';
-import makeStyles from './styles';
 import {PERMISSIONS, RESULTS, check, openSettings, request, requestMultiple} from 'react-native-permissions';
 import {Alert} from 'react-native';
+import makeStyles from './styles';
 
 const Home = () => {
   const [userData, setUserData] = useState();

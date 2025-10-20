@@ -3,8 +3,8 @@ import {ListItem} from 'react-native-elements';
 import FLContainer from 'components/core/FLContainer';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {FlatList} from 'react-native';
-import styles from './styles';
 import I18n from 'react-native-i18n';
+import styles from './styles';
 import CONSTANTS from '../../config/constants';
 
 const settings = [

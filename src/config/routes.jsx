@@ -48,7 +48,9 @@ function AppNavigator() {
 
   useEffect(() => {
     // Monitor characteristics only while connected; ensure cleanup when dependencies change
-    if (!isConnected || !bluetoothDeviceId) return;
+    if (!isConnected || !bluetoothDeviceId) {
+      return;
+    }
     const cleanup = monitorValues();
     return cleanup;
   }, [isConnected, bluetoothDeviceId]);

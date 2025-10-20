@@ -1,10 +1,10 @@
 import React from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 
+import {LogBox} from 'react-native';
 import AppNavigator from './config/routes';
 import {BluetoothContextProvider} from './context';
 import {configureLocalization} from './localization';
-import {LogBox} from 'react-native';
 
 configureLocalization();
 LogBox.ignoreAllLogs();

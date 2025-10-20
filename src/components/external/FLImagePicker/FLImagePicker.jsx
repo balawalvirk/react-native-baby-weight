@@ -8,8 +8,8 @@ import FLFancyButton from 'components/external/FLFancyButton';
 import I18n from 'react-native-i18n';
 import toast from 'utils/toast';
 import colors from 'config/colors';
-import styles from './styles';
 import {PERMISSIONS, RESULTS, check, request, openSettings} from 'react-native-permissions';
+import styles from './styles';
 
 class FLImagePicker extends Component {
   state = {
@@ -50,9 +50,7 @@ class FLImagePicker extends Component {
   getGalleryPermission = () => {
     if (Platform.OS === 'android') {
       // Android 13+ uses READ_MEDIA_IMAGES, older versions use READ_EXTERNAL_STORAGE
-      return Platform.Version >= 33
-        ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
-        : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+      return Platform.Version >= 33 ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
     }
     return PERMISSIONS.IOS.PHOTO_LIBRARY;
   };
@@ -91,7 +89,9 @@ class FLImagePicker extends Component {
       });
     } else {
       // Close modal and prompt user to open Settings
-      if (this.state.isModalVisible) this.toggleModal();
+      if (this.state.isModalVisible) {
+        this.toggleModal();
+      }
       Alert.alert(
         'Permission Required',
         'Please enable photo library access in the app settings.',
@@ -112,14 +112,14 @@ class FLImagePicker extends Component {
       maxHeight: 500,
       quality: 1,
     };
+
+    // Check permission status
     const permission = this.getCameraPermission();
-    const status = await this.checkAndRequestPermission(
-      permission,
-      'Camera Access Required',
-      'MyBaby Weigh needs access to your camera to take a photo.',
-    );
+    const status = await check(permission);
 
     if (status === RESULTS.GRANTED) {
+      // Permission granted, launch camera
+      this.toggleModal();
       launchCamera(options, (response) => {
         if (response.didCancel) {
           // User cancelled image picker
@@ -129,18 +129,57 @@ class FLImagePicker extends Component {
           const source = {uri: response.assets[0].uri};
           onChangeImage(source);
         }
-        // Close modal after response (whether cancelled, error, or success)
-        this.toggleModal();
       });
+    } else if (status === RESULTS.DENIED) {
+      // Permission denied, request it
+      const requestStatus = await request(permission);
+      if (requestStatus === RESULTS.GRANTED) {
+        // Permission granted after request, launch camera
+        this.toggleModal();
+        launchCamera(options, (response) => {
+          if (response.didCancel) {
+            // User cancelled image picker
+          } else if (response.errorMessage) {
+            toast(I18n.t('IMAGE_PICKER_ERROR'));
+          } else {
+            const source = {uri: response.assets[0].uri};
+            onChangeImage(source);
+          }
+        });
+      } else {
+        // Permission denied, show alert and open settings directly
+        this.toggleModal();
+        Alert.alert(
+          'Camera Access Required',
+          'MyBaby Weigh needs access to your camera to take a photo.',
+          [
+            {
+              text: 'Open Settings',
+              onPress: () => openSettings().catch(() => console.warn('Cannot open settings')),
+            },
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+          ],
+          {cancelable: true},
+        );
+      }
     } else {
-      // Close modal and prompt user to open Settings
-      if (this.state.isModalVisible) this.toggleModal();
+      // Blocked or unavailable, open settings directly
+      this.toggleModal();
       Alert.alert(
-        'Permission Required',
-        'Please enable camera access in the app settings.',
+        'Camera Access Required',
+        'Please enable camera access in your settings.',
         [
-          {text: 'Cancel', style: 'cancel'},
-          {text: 'Open Settings', onPress: () => openSettings().catch(() => console.warn('Cannot open settings'))},
+          {
+            text: 'Open Settings',
+            onPress: () => openSettings().catch(() => console.warn('Cannot open settings')),
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
         ],
         {cancelable: true},
       );

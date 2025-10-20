@@ -4,6 +4,7 @@ import I18n from 'react-native-i18n';
 import {PERMISSIONS} from 'react-native-permissions';
 import manager from 'utils/BleManager';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
+
 export const scanDevice = () => {
   return new Promise((res, rej) => {
     manager.startDeviceScan(null, null, (error, device) => {
