@@ -682,7 +682,7 @@ const Weigh = ({navigation}) => {
           <FLText style={weight ? weightText : weightText2}>
             {weight || I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.DISCONNECT)}
           </FLText>
-          {isSwitchingUnit && <FLText style={styles.smallText}>Switching unit...</FLText>}
+          {isSwitchingUnit && <FLText style={styles.smallText}></FLText>}
         </FLContainer>
       </FLContainer>
       <FLContainer style={styles.functionPane}>
