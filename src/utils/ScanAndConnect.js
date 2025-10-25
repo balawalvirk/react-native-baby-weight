@@ -1,14 +1,13 @@
 import CONSTANTS from 'config/constants';
-import {Alert, Linking} from 'react-native';
-import I18n from 'react-native-i18n';
-import {PERMISSIONS} from 'react-native-permissions';
-import manager from 'utils/BleManager';
+import {Alert} from 'react-native';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
+import I18n from 'react-native-i18n';
+import manager from 'utils/BleManager';
 export const scanDevice = () => {
   return new Promise((res, rej) => {
     manager.startDeviceScan(null, null, (error, device) => {
       let data = {};
-      console.log('Paired devices:', JSON.stringify(device, null, 2));
+      // console.log('Paired devices:', JSON.stringify(device, null, 2));
       if (device?.name === CONSTANTS.DEVICE_NAME) {
         manager.stopDeviceScan();
         data = {...data, status: I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTING), id: device?.id};
@@ -94,7 +93,7 @@ export const connectToDevice = async (bluetoothDeviceId, retryCount = 3) => {
       try {
         await manager.cancelDeviceConnection(bluetoothDeviceId);
         // Wait a bit after canceling connection
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (cleanupError) {
         console.error('Error cleaning up failed connection:', cleanupError);
       }

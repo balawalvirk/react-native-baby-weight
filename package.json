@@ -24,6 +24,7 @@
     "@react-native-community/picker": "1.8.1",
     "@react-navigation/native": "6.0.8",
     "@react-navigation/native-stack": "6.5.0",
+    "base-64": "^1.0.0",
     "esprima": "4.0.1",
     "husky": "7.0.1",
     "lodash-es": "4.17.15",
