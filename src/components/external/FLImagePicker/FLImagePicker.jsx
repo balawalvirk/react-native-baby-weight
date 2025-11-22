@@ -20,39 +20,22 @@ class FLImagePicker extends Component {
     this.setState((prevState) => ({isModalVisible: !prevState.isModalVisible}));
   };
 
-  requestPermissionWithAlert = (permission, title, message) => {
-    return new Promise((resolve) => {
-      Alert.alert(
-        title,
-        message,
-        [
-          {
-            text: 'OK',
-            onPress: async () => {
-              const status = await request(permission);
-              resolve(status);
-            },
-          },
-        ],
-        {cancelable: false},
-      );
-    });
-  };
-
   checkAndRequestPermission = async (permission, title, message) => {
     const status = await check(permission);
-    if (status === RESULTS.GRANTED) {
+    if (status === RESULTS.GRANTED || status === RESULTS.LIMITED) {
       return RESULTS.GRANTED;
     }
-    return await this.requestPermissionWithAlert(permission, title, message);
+    const requested = await request(permission);
+    if (requested === RESULTS.GRANTED || requested === RESULTS.LIMITED) {
+      return RESULTS.GRANTED;
+    }
+    return requested;
   };
 
   getGalleryPermission = () => {
     if (Platform.OS === 'android') {
       // Android 13+ uses READ_MEDIA_IMAGES, older versions use READ_EXTERNAL_STORAGE
-      return Platform.Version >= 33
-        ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
-        : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+      return Platform.Version >= 33 ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
     }
     return PERMISSIONS.IOS.PHOTO_LIBRARY;
   };
@@ -65,86 +48,75 @@ class FLImagePicker extends Component {
     const {onChangeImage} = this.props;
     const options = {
       mediaType: 'photo',
-      maxWidth: 500,
-      maxHeight: 500,
+      selectionLimit: 1,
+      includeBase64: false,
+      includeExtra: false,
       quality: 1,
+      saveToPhotos: false,
     };
-    const permission = this.getGalleryPermission();
-    const status = await this.checkAndRequestPermission(
-      permission,
-      'Photo Access Required',
-      'MyBaby Weigh needs access to your photos to select an image.',
-    );
-
-    if (status === RESULTS.GRANTED) {
-      // Close modal immediately when gallery opens
-      this.toggleModal();
-      launchImageLibrary(options, (response) => {
-        if (response.didCancel) {
-          // User cancelled image picker
-        } else if (response.errorMessage) {
-          toast(I18n.t('IMAGE_PICKER_ERROR'));
-        } else {
-          const source = {uri: response.assets[0].uri};
-          onChangeImage(source);
-        }
-      });
-    } else {
-      // Close modal and prompt user to open Settings
-      if (this.state.isModalVisible) this.toggleModal();
-      Alert.alert(
-        'Permission Required',
-        'Please enable photo library access in the app settings.',
-        [
-          {text: 'Cancel', style: 'cancel'},
-          {text: 'Open Settings', onPress: () => openSettings().catch(() => console.warn('Cannot open settings'))},
-        ],
-        {cancelable: true},
-      );
-    }
+    if (this.state.isModalVisible) this.toggleModal();
+    launchImageLibrary(options, (response) => {
+      if (response?.didCancel) {
+        return;
+      }
+      if (response?.errorMessage) {
+        toast(I18n.t('IMAGE_PICKER_ERROR'));
+        return;
+      }
+      const asset = response?.assets?.[0];
+      if (asset?.uri) {
+        onChangeImage({uri: asset.uri});
+      }
+    });
   };
 
   launchCamera = async () => {
     const {onChangeImage} = this.props;
     const options = {
       mediaType: 'photo',
-      maxWidth: 500,
-      maxHeight: 500,
-      quality: 1,
+      selectionLimit: 1,
+      includeBase64: false,
+      includeExtra: false,
+      quality: 0.8,
+      saveToPhotos: false,
+      cameraType: 'back',
     };
-    const permission = this.getCameraPermission();
-    const status = await this.checkAndRequestPermission(
-      permission,
-      'Camera Access Required',
-      'MyBaby Weigh needs access to your camera to take a photo.',
-    );
-
-    if (status === RESULTS.GRANTED) {
-      launchCamera(options, (response) => {
-        if (response.didCancel) {
-          // User cancelled image picker
-        } else if (response.errorMessage) {
-          toast(I18n.t('IMAGE_PICKER_ERROR'));
-        } else {
-          const source = {uri: response.assets[0].uri};
-          onChangeImage(source);
-        }
-        // Close modal after response (whether cancelled, error, or success)
-        this.toggleModal();
-      });
-    } else {
-      // Close modal and prompt user to open Settings
-      if (this.state.isModalVisible) this.toggleModal();
-      Alert.alert(
-        'Permission Required',
-        'Please enable camera access in the app settings.',
-        [
-          {text: 'Cancel', style: 'cancel'},
-          {text: 'Open Settings', onPress: () => openSettings().catch(() => console.warn('Cannot open settings'))},
-        ],
-        {cancelable: true},
+    if (Platform.OS === 'android') {
+      const permission = this.getCameraPermission();
+      const status = await this.checkAndRequestPermission(
+        permission,
+        'Camera Access Required',
+        'MyBaby Weigh needs access to your camera to take a photo.',
       );
+      if (status !== RESULTS.GRANTED) {
+        if (this.state.isModalVisible) this.toggleModal();
+        Alert.alert(
+          'Permission Required',
+          'Please enable camera access in the app settings.',
+          [
+            {text: 'Cancel', style: 'cancel'},
+            {text: 'Open Settings', onPress: () => openSettings().catch(() => console.warn('Cannot open settings'))},
+          ],
+          {cancelable: true},
+        );
+        return;
+      }
     }
+
+    if (this.state.isModalVisible) this.toggleModal();
+    launchCamera(options, (response) => {
+      if (response?.didCancel) {
+        return;
+      }
+      if (response?.errorMessage) {
+        toast(I18n.t('IMAGE_PICKER_ERROR'));
+        return;
+      }
+      const asset = response?.assets?.[0];
+      if (asset?.uri) {
+        onChangeImage({uri: asset.uri});
+      }
+    });
   };
 
   render() {

@@ -5,6 +5,16 @@ export default StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  graphContainerLandscape: {
+    flexDirection: 'row',
+  },
+  graphPane: {
+    flex: 0,
+    width: '100%',
+  },
+  graphPaneLandscape: {
+    flex: 3,
+  },
   graphChoosePointView: {
     maxHeight: 60,
     justifyContent: 'center',
@@ -19,9 +29,20 @@ export default StyleSheet.create({
       ios: 0,
     }),
     flex: 1,
+    width: '100%',
+    backgroundColor: '#fff',
+  },
+  listPaneLandscape: {
+    flex: 2,
+    marginTop: 0,
+    paddingLeft: 12,
   },
   scrollView: {
     flex: 1,
+    width: '100%',
+  },
+  scrollViewContent: {
+    paddingBottom: 16,
   },
   goalTextView: {
     maxHeight: 35,

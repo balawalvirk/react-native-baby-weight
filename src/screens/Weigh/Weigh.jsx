@@ -43,6 +43,7 @@ const Weigh = ({navigation}) => {
   const reconnectAttemptsRef = useRef(0);
   const updateTimerRef = useRef(null);
   const userInitiatedUnitChangeRef = useRef(false); // Track if user clicked unit button
+  const lastSpokenRef = useRef(''); // Track last spoken phrase to prevent stale reads
 
   const {
     store: {
@@ -231,6 +232,12 @@ const Weigh = ({navigation}) => {
       console.log(`Updating UI - Unit: ${weightData.unit}, Display: ${display}`);
       setDisplayWeight(display);
       setAudioWeight(audio);
+
+      // Speak the latest value immediately, avoiding stale audio
+      if (autoSpeak && audio && audio !== lastSpokenRef.current) {
+        speak(audio);
+        lastSpokenRef.current = audio;
+      }
 
       // Sync unit selection with device
       if (selectedUnit !== weightData.unit) {
@@ -485,22 +492,21 @@ const Weigh = ({navigation}) => {
   }, [bluetoothDeviceId, isConnected, connect]);
 
   useEffect(() => {
-    if (prevWeight !== displayWeight && autoSpeak && displayWeight) {
-      onSpeakDebounced(audioWeight);
-    }
+    // Remove debounced speaking to avoid reading previous value
     if (displayWeight === prevWeight) {
       setIsWeightStatic(true);
     } else {
       setWeight(displayWeight);
       setIsWeightStatic(false);
     }
-  }, [audioWeight, autoSpeak, displayWeight, onSpeakDebounced, prevWeight]);
+  }, [autoSpeak, displayWeight, prevWeight]);
 
   const speak = useCallback(
     (text) => {
       Tts.getInitStatus().then(
         () => {
-          if (audioWeight && text) {
+          if (text) {
+            Tts.stop();
             Tts.speak(text);
             if (!isWeightHold && bluetoothDevice) {
               handleToggleHoldWeight();
@@ -512,7 +518,7 @@ const Weigh = ({navigation}) => {
         },
       );
     },
-    [audioWeight, isWeightHold, bluetoothDevice, handleToggleHoldWeight],
+    [isWeightHold, bluetoothDevice, handleToggleHoldWeight],
   );
   const handleToggleTareToZero = useCallback(async () => {
     if (!bluetoothDevice) {

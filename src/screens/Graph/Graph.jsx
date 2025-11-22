@@ -183,25 +183,29 @@ const Graph = () => {
 
   const graphSelectedUnit = handleSelectUnits(userData);
   const graphHeight = isLandscape ? Math.floor(height * 0.6) : Math.floor(height * 0.35);
+  const graphAreaStyle = isLandscape ? styles.graphPaneLandscape : {height: graphHeight + 120};
 
   return (
-    <View style={styles.graphContainer}>
-      <MWGraph
-        data={userData.data}
-        goal={userData.goal}
-        mode={mode}
-        handleModeChange={handleModeChange}
-        zoomDomain={zoomDomain}
-        selectedUnit={graphSelectedUnit}
-      />
-      {!!userData.goal && (
-        <FLPlainTextView
-          text={`${I18n.t('EDIT_PROFILE.GOAL')}: ${userData?.goal || 0} ${handleSelectUnits(userData)}`}
-          style={styles.goalTextView}
-          textStyle={styles.goalText}
+    <View style={[styles.graphContainer, isLandscape && styles.graphContainerLandscape]}>
+      <View style={graphAreaStyle}>
+        <MWGraph
+          data={userData.data}
+          goal={userData.goal}
+          mode={mode}
+          handleModeChange={handleModeChange}
+          zoomDomain={zoomDomain}
+          selectedUnit={graphSelectedUnit}
+          graphHeight={graphHeight}
         />
-      )}
-      <View style={styles.scrollViewContainer}>
+        {!!userData.goal && (
+          <FLPlainTextView
+            text={`${I18n.t('EDIT_PROFILE.GOAL')}: ${userData?.goal || 0} ${handleSelectUnits(userData)}`}
+            style={styles.goalTextView}
+            textStyle={styles.goalText}
+          />
+        )}
+      </View>
+      <View style={isLandscape ? styles.listPaneLandscape : styles.scrollViewContainer}>
         {data.length ? (
           <>
             <FLPlainTextView
@@ -209,9 +213,10 @@ const Graph = () => {
               style={styles.graphChoosePointView}
               textStyle={styles.graphChoosePointText}
             />
-            <ScrollView style={styles.scrollView}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator>
               {data.map((el, index, arr) => (
                 <FLLinePoint
+                  key={arr[arr.length - index - 1]?.key || index}
                   touchableStyle={clickedListItemIndex === index ? {backgroundColor: colors.PRIMARY} : {}}
                   textStyle={clickedListItemIndex === index ? {color: colors.LIGHT} : {}}
                   handleNavigatePress={() => handleNavigatePress(arr[arr.length - index - 1].key, index)}
