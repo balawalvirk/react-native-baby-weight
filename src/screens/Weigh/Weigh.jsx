@@ -44,6 +44,7 @@ const Weigh = ({navigation}) => {
   const updateTimerRef = useRef(null);
   const userInitiatedUnitChangeRef = useRef(false); // Track if user clicked unit button
   const lastSpokenRef = useRef(''); // Track last spoken phrase to prevent stale reads
+  const [ttsReady, setTtsReady] = useState(false);
 
   const {
     store: {
@@ -150,6 +151,22 @@ const Weigh = ({navigation}) => {
     };
   }, [disconnectAndCleanup]);
 
+  useEffect(() => {
+    // Pre-initialize TTS engine
+    Tts.getInitStatus().then(
+      () => {
+        console.log('TTS engine ready');
+        setTtsReady(true);
+      },
+      (err) => {
+        if (err.code === 'no_engine') {
+          Tts.requestInstallEngine();
+        }
+        setTtsReady(false);
+      },
+    );
+  }, []);
+
   // --------- RESET ON SCREEN FOCUS (when coming back) ---------
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -177,6 +194,9 @@ const Weigh = ({navigation}) => {
     return unsubscribe;
   }, [navigation, bluetoothDeviceId, isConnected, connect]);
 
+  useEffect(() => {
+    connect();
+  }, []);
   // --------- SCREEN BLUR (when leaving screen) ---------
   useEffect(() => {
     const unsubscribe = navigation.addListener('blur', () => {
@@ -230,14 +250,22 @@ const Weigh = ({navigation}) => {
 
     if (display) {
       console.log(`Updating UI - Unit: ${weightData.unit}, Display: ${display}`);
+
+      // Speak FIRST before any state updates - skip TTS check if already initialized
+      if (autoSpeak && ttsReady && audio && audio !== lastSpokenRef.current) {
+        Tts.stop();
+        Tts.speak(audio);
+        lastSpokenRef.current = audio;
+
+        // Auto-hold immediately, don't wait
+        if (!isWeightHold && bluetoothDevice) {
+          handleToggleHoldWeight();
+        }
+      }
+
+      // Update UI state after speaking starts
       setDisplayWeight(display);
       setAudioWeight(audio);
-
-      // Speak the latest value immediately, avoiding stale audio
-      if (autoSpeak && audio && audio !== lastSpokenRef.current) {
-        speak(audio);
-        lastSpokenRef.current = audio;
-      }
 
       // Sync unit selection with device
       if (selectedUnit !== weightData.unit) {
@@ -252,14 +280,12 @@ const Weigh = ({navigation}) => {
 
           // Auto-pause when user changes unit
           if (!isWeightHold) {
-            setTimeout(() => {
-              handleToggleHoldWeight();
-            }, 100);
+            handleToggleHoldWeight();
           }
         }
       }
     }
-  }, [formatWeightDisplay, selectedUnit, isWeightHold]);
+  }, [formatWeightDisplay, selectedUnit, isWeightHold, autoSpeak, ttsReady, bluetoothDevice, handleToggleHoldWeight]);
 
   const handleToggleHoldWeight = useCallback(async () => {
     if (!bluetoothDevice) {
@@ -409,11 +435,11 @@ const Weigh = ({navigation}) => {
           latestWeightDataRef.current = vals;
 
           if (updateTimerRef.current) clearTimeout(updateTimerRef.current);
-          updateTimerRef.current = setTimeout(() => {
-            if (isMountedRef.current) {
-              updateDisplayFromRef();
-            }
-          }, 100);
+          // updateTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            updateDisplayFromRef();
+          }
+          // }, 0);
 
           setConnectionStatus(I18n.t(CONSTANTS.BLE_CONNECTION_STATUS.CONNECTED));
         },
