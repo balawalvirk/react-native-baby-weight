@@ -53,7 +53,7 @@
     </activity>
     <provider
 			android:name="androidx.core.content.FileProvider"
-			android:authorities="com.myweigh.baby.fileprovider"
+			android:authorities="com.myweigh.baby.app.fileprovider"
 			android:exported="false"
 			android:grantUriPermissions="true"
 			tools:replace="android:authorities"

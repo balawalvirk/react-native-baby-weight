@@ -58,6 +58,7 @@ public class MainApplication extends Application implements ShareApplication, Re
     }
     @Override
 public Intent registerReceiver(@Nullable BroadcastReceiver receiver, IntentFilter filter) {
+    // Handle SDK 34+ requirement for RECEIVER_EXPORTED flag
     if (Build.VERSION.SDK_INT >= 34 && getApplicationInfo().targetSdkVersion >= 34) {
         return super.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
     } else {
@@ -75,7 +76,7 @@ public Intent registerReceiver(@Nullable BroadcastReceiver receiver, IntentFilte
 
     @Override
     public String getFileProviderAuthority() {
-        return "com.myweigh.baby.fileprovider";
+        return "com.myweigh.baby.app.fileprovider";
     }
 
     /**

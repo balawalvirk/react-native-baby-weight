@@ -13,6 +13,8 @@
     "prepare": "husky install",
     "clean": "react-native clean-project-auto",
     "generate-apk": "cd android && ./gradlew app:assembleRelease",
+    "generate-aab": "./generate-aab.sh",
+    "open-aab": "open android/app/build/outputs/bundle/release",
     "temp-release": "yarn generate-apk && yarn open-explorer",
     "open-explorer": "open android/app/build/outputs/apk/release",
     "bulldozer": "npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res"

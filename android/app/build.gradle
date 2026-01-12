@@ -115,8 +115,8 @@ android {
         applicationId "com.myweigh.baby.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName '1.6'
+        versionCode 9
+        versionName '1.9'
         multiDexEnabled true
     }
     signingConfigs {
@@ -225,17 +225,19 @@ afterEvaluate {
     def bundleTask = tasks.findByName('bundleReleaseJsAndAssets')
     if (bundleTask) {
         def asyncStorageTasks = [
-            'react-native-async-storage_async-storage:compileReleaseAidl',
-            'react-native-async-storage_async-storage:compileReleaseJavaWithJavac',
-            'react-native-async-storage_async-storage:compileReleaseRenderscript',
-            'react-native-async-storage_async-storage:packageReleaseResources',
-            'react-native-async-storage_async-storage:generateReleaseResValues',
-            'react-native-async-storage_async-storage:packageReleaseRenderscript',
-            'react-native-async-storage_async-storage:mergeReleaseNativeLibs'
+            ':@react-native-async-storage_async-storage:compileReleaseAidl',
+            ':@react-native-async-storage_async-storage:compileReleaseJavaWithJavac',
+            ':@react-native-async-storage_async-storage:compileReleaseRenderscript',
+            ':@react-native-async-storage_async-storage:packageReleaseResources',
+            ':@react-native-async-storage_async-storage:generateReleaseResValues',
+            ':@react-native-async-storage_async-storage:packageReleaseRenderscript',
+            ':@react-native-async-storage_async-storage:mergeReleaseNativeLibs',
+            ':@react-native-async-storage_async-storage:generateReleaseBuildConfig',
+            ':@react-native-async-storage_async-storage:processReleaseManifest'
         ]
         
         asyncStorageTasks.each { taskPath ->
-            def task = project.findProject(':react-native-async-storage_async-storage')?.tasks?.findByName(taskPath.split(':').last())
+            def task = project.findProject(taskPath.split(':')[0..-2].join(':'))?.tasks?.findByName(taskPath.split(':').last())
             if (task) {
                 bundleTask.dependsOn(task)
             }
